@@ -1,70 +1,39 @@
 "use client";
 
+import { Camera } from "@/components/camera";
 import { CameraButton } from "@/components/camera-button";
 import { MicButton } from "@/components/mic-button";
 import { ShareButton } from "@/components/share-button";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef } from "react";
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:4000", {
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
+});
 
 export default function Meeting() {
-  //   const { cameraOn, checkCameraPermission, hasCameraPermission, toggleCamera } =
-  //     useCamera();
-
-  //   useEffect(() => {
-  //     if (!hasCameraPermission) {
-  //       checkCameraPermission();
-  //     }
-  //   }, [checkCameraPermission, hasCameraPermission]);
-
-  //   console.log({ hasCameraPermission });
-
-  const cameraRef = useRef<HTMLVideoElement>(null);
-
-  function startCamera() {
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then((stream) => {
-        if (cameraRef.current) {
-          cameraRef.current.width = window.screen.availWidth;
-          cameraRef.current.height = window.screen.availHeight;
-          cameraRef.current.srcObject = stream;
-          cameraRef.current.play();
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        alert(`${err}`);
-      });
-  }
-
-  function stopCamera() {
-    navigator.mediaDevices.getUserMedia({ video: false });
-    // if (cameraRef.current) {
-    //   // Stop all video tracks
-    //   const tracks = cameraRef.current.getTracks();
-    //   tracks.forEach((track) => track.stop());
-    //   cameraRef.current = null; // Clear the stream reference
-
-    //   if (cameraRef.current) {
-    //     cameraRef.current.srcObject = null; // Clear the video source
-    //   }
-    // }
-  }
+  const msg = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
-    startCamera();
+    // Listen for incoming messages
+    socket.on("message", (data: string) => {
+      console.log("Message from socket:", data);
+      // msg.current?.innerHTML = data;
+      // setMessages((prev) => [...prev, data]);
+    });
 
-    return stopCamera;
+    return () => {
+      socket.off("message");
+    };
   }, []);
 
   return (
     <div className="flex flex-col min-h-screen p-8 gap-8 justify-center items-center sm:p-20 bg-black">
-      <video
-        ref={cameraRef}
-        id="camera"
-        className="absolute top-0 left-0 w-screen h-screen"
-        controls={false}
-      />
+      <Camera className="absolute top-0 left-0 w-screen h-screen" />
+      <h1 ref={msg} className="z-50"></h1>
       <footer className="flex gap-0.5 absolute bottom-4">
         <ShareButton />
         <MicButton />

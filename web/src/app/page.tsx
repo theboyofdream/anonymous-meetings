@@ -37,6 +37,10 @@ export default function Home() {
             type="text"
             maxLength={6}
             minLength={6}
+            autoCorrect="none"
+            autoCapitalize="none"
+            autoComplete="none"
+            aria-autocomplete="none"
             required
           />
           <Button>Join</Button>

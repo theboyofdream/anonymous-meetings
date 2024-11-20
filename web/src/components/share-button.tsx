@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "./ui/button";
 
 export function ShareButton() {
+  const [canShare, setCanShare] = useState(false);
   const shareMeetingLink = useCallback(() => {
     navigator
       .share({
@@ -13,9 +14,18 @@ export function ShareButton() {
       // .then(() => console.log("Sharing was successful"))
       .catch((error) => alert(`Sharing failed: ${error}`));
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      if (await navigator.share) {
+        setCanShare(true);
+      }
+    })();
+  }, [setCanShare]);
+
   return (
     <>
-      {navigator.share && (
+      {canShare && (
         <Button onClick={shareMeetingLink}>share meeting link</Button>
       )}
     </>

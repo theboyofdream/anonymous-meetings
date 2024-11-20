@@ -1,6 +1,7 @@
+// const CAPITAL_ALPHABETS = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+
 module.exports = function generateRandomString(length = 6) {
-  const characters =
-    "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const characters = "abcdefghijkmnopqrstuvwxyz23456789";
   let result = "";
 
   for (let i = 0; i < length; i++) {
