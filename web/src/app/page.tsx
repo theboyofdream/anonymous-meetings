@@ -22,11 +22,20 @@ export default function Home() {
     },
     validationSchema: JOINING_MEET_FORM_SCHEMA,
     onSubmit: async (values, formikHelpers) => {
+      console.log(values);
+
       formikHelpers.setSubmitting(true);
       let isJoiningCodeValid = false;
 
+      const requestHeaders = new Headers();
+      requestHeaders.append("Content-Type", "application/json");
+
+      // Delay request
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       await fetch("http://localhost:4000/is-joining-code-valid", {
         method: "POST",
+        headers: requestHeaders,
         body: JSON.stringify({ joiningCode: values.joining_code }),
         redirect: "follow",
       })
@@ -81,21 +90,7 @@ export default function Home() {
       </h1>
       <div className="flex flex-col gap-4 p-4">
         <span>
-          <form
-            className="flex gap-2"
-            onSubmit={meetJoinForm.handleSubmit}
-            // onSubmit={(e) => {
-            //   e.preventDefault();
-
-            //   const joiningCode = e.target?.joining_code.value || "";
-            //   if (joiningCode.length == 6) {
-            //     window.open(
-            //       `${window.location.href}/meet/${joiningCode}`,
-            //       "_self"
-            //     );
-            //   }
-            // }}
-          >
+          <form className="flex gap-2" onSubmit={meetJoinForm.handleSubmit}>
             <Input
               id="input"
               name="joining_code"
@@ -118,7 +113,7 @@ export default function Home() {
               onClick={() => meetJoinForm.handleSubmit()}
               disabled={meetJoinForm.isSubmitting || !meetJoinForm.isValid}
             >
-              Join
+              {meetJoinForm.isSubmitting ? "Joining..." : "Join"}
             </Button>
           </form>
           {meetJoinForm.errors.joining_code && (
