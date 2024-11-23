@@ -23,6 +23,8 @@ export function Camera(props: CameraProps) {
           cameraRef.current.height = window.screen.availHeight;
           cameraRef.current.srcObject = stream;
           cameraRef.current.play();
+
+          console.log(stream);
         }
       })
       .catch((err) => {

@@ -9,6 +9,8 @@ const SERVER_PORT = process.env.PORT || 4000;
 const CORS_ORIGIN = ["http://localhost:3000", "http://localhost:4000"];
 
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: CORS_ORIGIN,
@@ -43,8 +45,23 @@ io.on("connection", (socket) => {
   });
 });
 
+// io.on("join-meet",args=>{})
+// io.on("join-meet",args=>{})
+// io.on("leave-meet",args=>{})
+
 app.get("/", (req, res) => {
   res.status(200).send("Server is active").end();
+});
+
+app.post("/is-joining-code-valid", (req, res) => {
+  let isJoiningCodeValid = meetingRooms[req.body?.joiningCode] ? true : false;
+  res
+    .status(200)
+    .send({
+      message: `Meet link is ${isJoiningCodeValid ? "valid" : "invalid"}`,
+      data: { isJoiningCodeValid },
+    })
+    .end();
 });
 
 app.post("/new-meet", (req, res) => {
@@ -60,6 +77,13 @@ app.post("/new-meet", (req, res) => {
       data: { meetID },
     })
     .end();
+});
+
+app.get("/ongoing-meets", (req, res) => {
+  res.status(200).send({
+    message: "",
+    data: meetingRooms,
+  });
 });
 
 httpServer.listen(SERVER_PORT, () =>

@@ -2,8 +2,73 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useFormik } from "formik";
+import { useRouter } from "next/navigation";
+import { object, string } from "yup";
+
+const JOINING_MEET_FORM_SCHEMA = object({
+  joining_code: string()
+    .min(6, "Invalid Joining code")
+    .max(6, "Invalid Joining code")
+    .required("Joining code is required."),
+});
 
 export default function Home() {
+  const router = useRouter();
+
+  const meetJoinForm = useFormik({
+    initialValues: {
+      joining_code: "",
+    },
+    validationSchema: JOINING_MEET_FORM_SCHEMA,
+    onSubmit: async (values, formikHelpers) => {
+      formikHelpers.setSubmitting(true);
+      let isJoiningCodeValid = false;
+
+      await fetch("http://localhost:4000/is-joining-code-valid", {
+        method: "POST",
+        body: JSON.stringify({ joiningCode: values.joining_code }),
+        redirect: "follow",
+      })
+        .then((res) => res.json())
+        .then((res) => {
+          isJoiningCodeValid = res.data?.isJoiningCodeValid ?? false;
+          if (!res.data?.isJoiningCodeValid) {
+            formikHelpers.setFieldError("joining_code", res.message);
+          }
+        });
+
+      formikHelpers.setSubmitting(false);
+
+      if (isJoiningCodeValid) {
+        router.push(`/meet/${values.joining_code}`);
+      }
+    },
+  });
+
+  const createNewMeet = useFormik({
+    initialValues: { dummyField: "" },
+    onSubmit: async (values, formikHelpers) => {
+      formikHelpers.setSubmitting(true);
+
+      // Delay request
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      await fetch("http://localhost:4000/new-meet", {
+        method: "POST",
+        redirect: "follow",
+      })
+        .then((res) => res.json())
+        .then((res) => {
+          if (res.data?.meetID) {
+            router.push(`/meet/${res.data.meetID}`);
+          }
+        });
+
+      formikHelpers.setSubmitting(false);
+    },
+  });
+
   return (
     <div className="flex flex-col min-h-screen p-8 gap-8 justify-center items-center sm:p-20 font-[family-name:var(--font-helvetica)]">
       <div className="flex justify-center items-center gap-2">
@@ -15,49 +80,89 @@ export default function Home() {
         Anonymous meet
       </h1>
       <div className="flex flex-col gap-4 p-4">
-        <form
-          className="flex gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
+        <span>
+          <form
+            className="flex gap-2"
+            onSubmit={meetJoinForm.handleSubmit}
+            // onSubmit={(e) => {
+            //   e.preventDefault();
 
-            const joiningCode = e.target?.joining_code.value || "";
-            if (joiningCode.length == 6) {
-              window.open(
-                `${window.location.href}/meet/${joiningCode}`,
-                "_self"
-              );
-            }
-          }}
-        >
-          <Input
-            id="input"
-            name="joining_code"
-            className="border-current border-b-2"
-            placeholder="Enter joining Code"
-            type="text"
-            maxLength={6}
-            minLength={6}
-            autoCorrect="none"
-            autoCapitalize="none"
-            autoComplete="none"
-            aria-autocomplete="none"
-            required
-          />
-          <Button>Join</Button>
-        </form>
+            //   const joiningCode = e.target?.joining_code.value || "";
+            //   if (joiningCode.length == 6) {
+            //     window.open(
+            //       `${window.location.href}/meet/${joiningCode}`,
+            //       "_self"
+            //     );
+            //   }
+            // }}
+          >
+            <Input
+              id="input"
+              name="joining_code"
+              className="border-current border-b-2"
+              placeholder="Enter joining Code"
+              type="text"
+              maxLength={6}
+              minLength={6}
+              autoCorrect="none"
+              autoCapitalize="none"
+              autoComplete="none"
+              aria-autocomplete="none"
+              required
+              onChange={meetJoinForm.handleChange("joining_code")}
+              onBlur={meetJoinForm.handleBlur("joining_code")}
+              enterKeyHint="done"
+            />
+            <Button
+              type="submit"
+              onClick={() => meetJoinForm.handleSubmit()}
+              disabled={meetJoinForm.isSubmitting || !meetJoinForm.isValid}
+            >
+              Join
+            </Button>
+          </form>
+          {meetJoinForm.errors.joining_code && (
+            <span className="flex gap-0.5 items-center text-sm text-red-500">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className="text-sm w-4 h-4 fill-red-500"
+              >
+                <path d="M0 0h24v24H0z" fill="none" />
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+              </svg>
+              {meetJoinForm.errors.joining_code}
+            </span>
+          )}
+          {/* </span> */}
+        </span>
 
         <div className="flex justify-center items-center gap-2">
           <h4>or</h4>
         </div>
 
-        <Button>Create new meet</Button>
+        <form onSubmit={createNewMeet.handleSubmit} className="w-full">
+          <Button
+            className="w-full"
+            disabled={createNewMeet.isSubmitting || meetJoinForm.isSubmitting}
+            onClick={() => createNewMeet.handleSubmit()}
+            type="submit"
+          >
+            {createNewMeet.isSubmitting
+              ? "Creating new meet..."
+              : "Create new meet"}
+          </Button>
+        </form>
 
         <Button
           //   variant={"link"}
           variant={"ghost"}
           size={"lg"}
           onClick={() => {
-            window.open("https://github.com/theboyofdream", "_blank");
+            window.open(
+              "https://github.com/theboyofdream/anonymous-meetings",
+              "_blank"
+            );
           }}
         >
           <svg
